@@ -29,16 +29,17 @@ object FaceDetect extends App {
     println("done image")
     im
   }
-    
+
+  // convert image to greyscale
   def toGray(image: Mat): Future[Mat] = Future {
-    // convert image to greyscale
     val greyMat = new Mat()
-    Imgproc.cvtColor(image, greyMat, Imgproc.COLOR_BGR2GRAY, 1)
+    val dstCn = 1 // number of channels in the destination image
+    Imgproc.cvtColor(image, greyMat, Imgproc.COLOR_BGR2GRAY, dstCn)
     greyMat
   }
 
+  // equalize histogram
   def equalize(image: Mat): Future[Mat] = Future {
-    // equalize histogram
     val equalizedMat = new Mat()
     Imgproc.equalizeHist(image, equalizedMat)
     equalizedMat
@@ -73,7 +74,7 @@ object FaceDetect extends App {
   
   println("\nRunning DetectFaceDemo")
   
-//  System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+  //  System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
   System.load("/home/mario/dev/tools/opencv-3.0.0-rc1/build/lib/libopencv_java300.so")
   
   // instantiate all independent futures before the for comprehension
