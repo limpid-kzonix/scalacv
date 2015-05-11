@@ -58,9 +58,11 @@ object FaceDetect extends App {
       val lineColor = new Scalar(0, 255, 0)
       val topLeft = new Point(rect.x, rect.y)
       val bottomRight = new Point(rect.x + rect.width, rect.y + rect.height)
-      val textTopLeft = new Point(rect.x, rect.y - 20)
       Imgproc.rectangle(image, topLeft, bottomRight, lineColor);
-      Imgproc.putText(image, s"Face $i", textTopLeft, Core.FONT_HERSHEY_PLAIN, 2, lineColor)
+      val textTopLeft = new Point(rect.x, rect.y - 20)
+      val fontFace = Core.FONT_HERSHEY_PLAIN
+      val fontScale = 2
+      Imgproc.putText(image, s"Face $i", textTopLeft, fontFace, fontScale, lineColor)
     }  
   }
     
@@ -74,6 +76,7 @@ object FaceDetect extends App {
 //  System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
   System.load("/home/mario/dev/tools/opencv-3.0.0-rc1/build/lib/libopencv_java300.so")
   
+  // instantiate all independent futures before the for comprehension
   val f = getClassifier("lbpcascade_frontalface.xml")
   val i = readImg("Lena.png")
   val p = for {
