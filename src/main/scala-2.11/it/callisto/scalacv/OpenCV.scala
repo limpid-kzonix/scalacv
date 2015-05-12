@@ -1,6 +1,8 @@
+package it.callisto.scalacv
+
 import scala.concurrent._
-import scala.concurrent.duration._
 import ExecutionContext.Implicits.global
+
 import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.core.MatOfRect
@@ -11,7 +13,15 @@ import org.opencv.imgproc.Imgproc
 import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.objdetect.CascadeClassifier
 
-object FaceDetect extends App {
+trait OpenCVUtils {
+
+  def loadNativeLibs(): Unit = {
+    System.load("/home/mario/dev/tools/opencv-3.0.0-rc1/build/lib/libopencv_java300.so")
+  }
+
+}
+
+trait OpenCVImg {
   
   def resourcePath(path: String): String = 
     getClass().getResource(path).getPath()
@@ -72,24 +82,4 @@ object FaceDetect extends App {
     Imgcodecs.imwrite(filename, image)
   }
   
-  println("\nRunning DetectFaceDemo")
-  
-  //  System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-  System.load("/home/mario/dev/tools/opencv-3.0.0-rc1/build/lib/libopencv_java300.so")
-  
-  // instantiate all independent futures before the for comprehension
-  val f = getClassifier("lbpcascade_frontalface.xml")
-  val i = readImg("Lena.png")
-  val p = for {
-    faceDetector ← f
-    image ← i
-    gray ← toGray(image)
-    equalized ← equalize(gray)
-    faces ← findFaces(equalized, faceDetector)
-    _ ← frameFaces(image, faces)
-    _ ← writeImg(image, "faceDetection.png")
-  } yield ()
-  
-  Await.ready(p, 5 seconds)
-    
 }
