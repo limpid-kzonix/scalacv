@@ -4,7 +4,7 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import ExecutionContext.Implicits.global
 
-object FaceDetect extends App with OpenCVUtils with OpenCVImg {
+object FaceDetect extends App with OpenCVImg with OpenCVDetect {
   
   println("\nRunning DetectFaceDemo")
   

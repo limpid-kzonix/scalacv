@@ -18,20 +18,13 @@ trait OpenCVUtils {
   def loadNativeLibs(): Unit = {
     System.load("/home/mario/dev/tools/opencv-3.0.0-rc1/build/lib/libopencv_java300.so")
   }
-
-}
-
-trait OpenCVImg {
   
   def resourcePath(path: String): String = 
     getClass().getResource(path).getPath()
 
-  def getClassifier(path: String): Future[CascadeClassifier] = Future {
-    println("reading classifier")
-    val cc = new CascadeClassifier(resourcePath(path))
-    println("done classifier")
-    cc
-  }
+}
+
+trait OpenCVImg with OpenCVUtils {
 
   def readImg(path: String): Future[Mat] = Future {
     println("reading image")
@@ -55,6 +48,22 @@ trait OpenCVImg {
     equalizedMat
   }
   
+  def writeImg(image: Mat, filename: String): Future[Unit] = Future {
+    println("Writing %s".format(filename))
+    Imgcodecs.imwrite(filename, image)
+  }
+  
+}
+
+trait OpenCVDetect with OpenCVUtils {
+
+   def getClassifier(path: String): Future[CascadeClassifier] = Future {
+    println("reading classifier")
+    val cc = new CascadeClassifier(resourcePath(path))
+    println("done classifier")
+    cc
+  }
+ 
   def findFaces(image: Mat, faceDetector: CascadeClassifier): Future[Vector[Rect]] = Future {
     val faceDetections = new MatOfRect()
     faceDetector.detectMultiScale(image, faceDetections)
@@ -76,10 +85,5 @@ trait OpenCVImg {
       Imgproc.putText(image, s"Face $i", textTopLeft, fontFace, fontScale, lineColor)
     }  
   }
-    
-  def writeImg(image: Mat, filename: String): Future[Unit] = Future {
-    println("Writing %s".format(filename))
-    Imgcodecs.imwrite(filename, image)
-  }
-  
+
 }
