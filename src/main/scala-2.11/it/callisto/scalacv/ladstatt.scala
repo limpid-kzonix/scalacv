@@ -16,6 +16,7 @@ import javafx.stage.Stage
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import javafx.application.Platform
+import java.util.concurrent.Executor
 
 class WebcamService extends Service[Future[Mat]] with OpenCVVideo with JfxUtils {
 
@@ -45,24 +46,24 @@ trait JfxUtils {
 
 }
 
+object JFXExecutionContext {
+  implicit val jFxExecutionContext: ExecutionContext = ExecutionContext.fromExecutor(new Executor {
+    def execute(command: Runnable): Unit = Platform.runLater(command)
+  })
+}
+
 class Ladstatt extends javafx.application.Application with OpenCVImg with JfxUtils {
 
-  def execOnUIThread(f: => Unit) {
-    Platform.runLater(new Runnable {
-      override def run() = f
-    })
-  }
-
+  val fxec = JFXExecutionContext.jFxExecutionContext
+  
   override def init(): Unit = loadNativeLibs // important to have this statement on the "right" thread
 
   val imageProperty = new SimpleObjectProperty[Image]()
 
-  def setImage(image: Image) = execOnUIThread(imageProperty.set(image))
+  def setImage(image: Image) = imageProperty.set(image)
 
-  def getImage(): Image = imageProperty.get
-
-  val MaxWidth = 1024.0
-  val MaxHeight = 720.0
+  val MaxWidth = 640.0
+  val MaxHeight = 480.0
 
   override def start(stage: Stage): Unit = {
     val imageService = new WebcamService
@@ -74,7 +75,7 @@ class Ladstatt extends javafx.application.Application with OpenCVImg with JfxUti
 
     imageBp.setCenter(imageView)
     bp.setCenter(imageBp)
-    val scene = new Scene(bp, MaxWidth + 100, MaxHeight + 300)
+    val scene = new Scene(bp, MaxWidth + 100, MaxHeight + 100)
     stage.setScene(scene)
     imageService.setOnSucceeded(
       mkEventHandler(
@@ -82,14 +83,11 @@ class Ladstatt extends javafx.application.Application with OpenCVImg with JfxUti
           for {
             fromCamera <- event.getSource.getValue.asInstanceOf[Future[Mat]]
             image <- mat2Image(fromCamera)
-          } {
-            setImage(image)
-            Platform.runLater(
-              new Runnable() {
-                def run = {
-                  imageService.restart
-                }
-              })
+          } yield {
+            Future {
+              setImage(image)
+              imageService.restart
+            } (fxec)
           }
         }))
 
