@@ -11,16 +11,16 @@ object FaceDetect extends App with OpenCVImg with OpenCVDetect {
   loadNativeLibs()
   
   // instantiate all independent futures before the for comprehension
-  val f = getClassifier("/lbpcascade_frontalface.xml")
-  val i = readImg("/Lena.png")
+  val f = Future { getClassifier("/lbpcascade_frontalface.xml") }
+  val fromFile = readImg("/Lena.png")
   val p = for {
     faceDetector ← f
-    image ← i
-    gray ← toGray(image)
+    mat_image ← fromFile
+    gray ← toGray(mat_image)
     equalized ← equalize(gray)
     faces ← findFaces(equalized, faceDetector)
-    _ ← frameFaces(image, faces)
-    _ ← writeImg(image, "faceDetection.png")
+    _ ← frameFaces(mat_image, faces)
+    _ ← writeImg(mat_image, "faceDetection.png")
   } yield ()
   
   Await.ready(p, 5 seconds)

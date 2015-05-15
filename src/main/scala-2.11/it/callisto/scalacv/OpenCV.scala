@@ -5,6 +5,7 @@ import ExecutionContext.Implicits.global
 
 import org.opencv.core.Core
 import org.opencv.core.Mat
+import org.opencv.core.MatOfByte
 import org.opencv.core.MatOfRect
 import org.opencv.core.Point
 import org.opencv.core.Rect
@@ -12,6 +13,11 @@ import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
 import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.objdetect.CascadeClassifier
+import org.opencv.videoio.VideoCapture
+
+import java.io.ByteArrayInputStream
+
+import javafx.scene.image.Image
 
 trait OpenCVUtils {
 
@@ -24,7 +30,7 @@ trait OpenCVUtils {
 
 }
 
-trait OpenCVImg with OpenCVUtils {
+trait OpenCVImg extends OpenCVUtils {
 
   def readImg(path: String): Future[Mat] = Future {
     println("reading image")
@@ -52,12 +58,20 @@ trait OpenCVImg with OpenCVUtils {
     println("Writing %s".format(filename))
     Imgcodecs.imwrite(filename, image)
   }
+
+  def mat2Image(mat: Mat): Future[Image] = {
+    Future {
+      val memory = new MatOfByte
+      Imgcodecs.imencode(".png", mat, memory)
+      new Image(new ByteArrayInputStream(memory.toArray()))
+    }
+  }
   
 }
 
-trait OpenCVDetect with OpenCVUtils {
+trait OpenCVDetect extends OpenCVUtils {
 
-   def getClassifier(path: String): Future[CascadeClassifier] = Future {
+   def getClassifier(path: String): CascadeClassifier = {
     println("reading classifier")
     val cc = new CascadeClassifier(resourcePath(path))
     println("done classifier")
@@ -84,6 +98,26 @@ trait OpenCVDetect with OpenCVUtils {
       val fontScale = 2
       Imgproc.putText(image, s"Face $i", textTopLeft, fontFace, fontScale, lineColor)
     }  
+  }
+  
+}
+
+trait OpenCVVideo {
+
+  def videoCapture: VideoCapture
+
+  def takeImage: Mat = {
+    val image = new Mat()
+    while (videoCapture.read(image) == false) {}
+    image
+  }
+
+  def sourceMat: Future[Mat] = Future {
+    assert(videoCapture.isOpened())
+    if (videoCapture.grab)
+      takeImage
+    else
+      throw new RuntimeException("Couldn't grab image!")
   }
 
 }
