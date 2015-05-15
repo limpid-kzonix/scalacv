@@ -4,12 +4,14 @@ import scala.concurrent._
 import ExecutionContext.Implicits.global
 
 import org.opencv.core.Core
+import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.core.MatOfByte
 import org.opencv.core.MatOfRect
 import org.opencv.core.Point
 import org.opencv.core.Rect
 import org.opencv.core.Scalar
+import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.objdetect.CascadeClassifier
@@ -39,32 +41,89 @@ trait OpenCVImg extends OpenCVUtils {
     im
   }
 
+  private def toDst(src: Mat, f: (Mat, Mat) => Unit): Mat = {
+    val dst = new Mat()
+    f(src, dst)
+    dst
+  }
+
   // convert image to greyscale
-  def toGray(image: Mat): Future[Mat] = Future {
-    val greyMat = new Mat()
+  def toGray(mat: Mat): Future[Mat] = Future {
     val dstCn = 1 // number of channels in the destination image
-    Imgproc.cvtColor(image, greyMat, Imgproc.COLOR_BGR2GRAY, dstCn)
-    greyMat
+    toDst(mat, (s, d) ⇒ Imgproc.cvtColor(s, d, Imgproc.COLOR_BGR2GRAY, dstCn))
   }
 
   // equalize histogram
-  def equalize(image: Mat): Future[Mat] = Future {
-    val equalizedMat = new Mat()
-    Imgproc.equalizeHist(image, equalizedMat)
-    equalizedMat
+  def equalize(mat: Mat): Future[Mat] = Future {
+    toDst(mat, (s, d) ⇒ Imgproc.equalizeHist(s, d))
   }
 
-  def writeImg(image: Mat, filename: String): Future[Unit] = Future {
+  def writeImg(mat: Mat, filename: String): Future[Unit] = Future {
     println("Writing %s".format(filename))
-    Imgcodecs.imwrite(filename, image)
+    Imgcodecs.imwrite(filename, mat)
   }
 
-  def mat2Image(mat: Mat): Future[Image] = {
-    Future {
-      val memory = new MatOfByte
-      Imgcodecs.imencode(".png", mat, memory)
-      new Image(new ByteArrayInputStream(memory.toArray()))
-    }
+  def mat2Image(mat: Mat): Future[Image] = Future {
+    val memory = new MatOfByte
+    Imgcodecs.imencode(".png", mat, memory)
+    new Image(new ByteArrayInputStream(memory.toArray()))
+  }
+
+  def gaussianBlur(mat: Mat): Future[Mat] = Future {
+    val border_default = 4
+    toDst(mat, (s, d) ⇒ Imgproc.GaussianBlur(s, d, new Size(3, 3), 0, 0, border_default))
+  }
+
+  def blur(mat: Mat): Future[Mat] = Future {
+    toDst(mat, (s, d) ⇒ Imgproc.blur(s, d, new Size(3, 3)))
+  }
+
+  def sobel(mat: Mat, x_order: Int, y_order: Int): Future[Mat] = Future {
+    val border_default = 4
+    toDst(mat, (s, d) ⇒ Imgproc.Sobel(s, d, CvType.CV_16S, x_order, y_order, 3, 1, 0, border_default))
+  }
+
+  def laplace(mat: Mat): Future[Mat] = Future {
+    val border_default = 4
+    toDst(mat, (s, d) ⇒ Imgproc.Laplacian(s, d, CvType.CV_16S, 3, 1, 0, border_default))
+  }
+
+  def convertScaleAbs(mat: Mat): Future[Mat] = Future {
+    toDst(mat, (s, d) ⇒ Core.convertScaleAbs(s, d))
+  }
+
+  def addWeighted(mat1: Mat, mat2: Mat): Future[Mat] = Future {
+    val weighted = new Mat()
+    Core.addWeighted(mat1, 0.5, mat2, 0.5, 0, weighted)
+    weighted
+  }
+
+}
+
+trait OpenCVCombos extends OpenCVImg {
+
+  def reduceNoise(mat: Mat): Future[Mat] =
+    for {
+      blurred ← gaussianBlur(mat)
+      gray ← toGray(blurred)
+    } yield (gray)
+
+  def approxGradient(mat: Mat): Future[Mat] = {
+    val gradient_x = for {
+      sobel ← sobel(mat, 1, 0)
+      scaled ← convertScaleAbs(sobel)
+    } yield (scaled)
+
+    val gradient_y = for {
+      sobel ← sobel(mat, 0, 1)
+      scaled ← convertScaleAbs(sobel)
+    } yield (scaled)
+
+    for {
+      x ← gradient_x
+      y ← gradient_y
+      weighted ← addWeighted(x, y)
+    } yield (weighted)
   }
 
 }
