@@ -9,5 +9,3 @@ lazy val root = (project in file(".")).
   settings(
     name := "scalacv"
   )
-  
-libraryDependencies += "com.github.sarxos" % "webcam-capture" % "0.3.10"

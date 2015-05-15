@@ -73,6 +73,8 @@ class CamFaceDetect extends javafx.application.Application with OpenCVImg with O
     val imageBp = new BorderPane
 
     lazy val faceDetector = getClassifier("/lbpcascade_frontalface.xml")
+    lazy val lEyeDetector = getClassifier("/haarcascade_lefteye_2splits.xml")    
+    lazy val rEyeDetector = getClassifier("/haarcascade_righteye_2splits.xml")    
 
     imageBp.setCenter(imageView)
     bp.setCenter(imageBp)
@@ -86,7 +88,9 @@ class CamFaceDetect extends javafx.application.Application with OpenCVImg with O
             gray ← toGray(mat_image)
             equalized ← equalize(gray)
             faces ← findFaces(equalized, faceDetector)
+            eyes ← findEyes(equalized, faces, lEyeDetector, rEyeDetector)
             _ ← frameFaces(mat_image, faces)
+            _ ← frameEyes(mat_image, faces, eyes)
             image ← mat2Image(mat_image)
           } yield {
             Future {

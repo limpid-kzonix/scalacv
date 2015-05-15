@@ -24,8 +24,8 @@ trait OpenCVUtils {
   def loadNativeLibs(): Unit = {
     System.load("/home/mario/dev/tools/opencv-3.0.0-rc1/build/lib/libopencv_java300.so")
   }
-  
-  def resourcePath(path: String): String = 
+
+  def resourcePath(path: String): String =
     getClass().getResource(path).getPath()
 
 }
@@ -53,7 +53,7 @@ trait OpenCVImg extends OpenCVUtils {
     Imgproc.equalizeHist(image, equalizedMat)
     equalizedMat
   }
-  
+
   def writeImg(image: Mat, filename: String): Future[Unit] = Future {
     println("Writing %s".format(filename))
     Imgcodecs.imwrite(filename, image)
@@ -66,40 +66,87 @@ trait OpenCVImg extends OpenCVUtils {
       new Image(new ByteArrayInputStream(memory.toArray()))
     }
   }
-  
+
 }
 
 trait OpenCVDetect extends OpenCVUtils {
 
-   def getClassifier(path: String): CascadeClassifier = {
+  type CC = CascadeClassifier
+
+  def getClassifier(path: String): CC = {
     println("reading classifier")
     val cc = new CascadeClassifier(resourcePath(path))
     println("done classifier")
     cc
   }
- 
-  def findFaces(image: Mat, faceDetector: CascadeClassifier): Future[Vector[Rect]] = Future {
+
+  def findFaces(image: Mat, faceDetector: CC): Future[Vector[Rect]] = Future {
     val faceDetections = new MatOfRect()
     faceDetector.detectMultiScale(image, faceDetections)
     val faces = faceDetections.toArray().toVector
     println("Detected %s faces".format(faces.size))
     faces
   }
-  
+
+  def findEyes(image: Mat, faces: Vector[Rect], lEye: CC, rEye: CC): Future[Vector[(Vector[Rect], Vector[Rect])]] = Future {
+    for (rect ← faces) yield {
+
+      val hWidth = rect.width / 2
+      val hHeight = rect.height / 2
+
+      // the left eye should be in the top-left quarter of the face area
+      val leftFaceMat = new Mat(image, new Rect(rect.x, rect.y, hWidth, hHeight))
+      val leftEyeDetections = new MatOfRect()
+      lEye.detectMultiScale(leftFaceMat, leftEyeDetections)
+
+      // the right eye should be in the top-right quarter of the face area
+      val rightFaceMat = new Mat(image, new Rect(rect.x + hWidth, rect.y, hWidth, hHeight))
+      val rightEyeDetections = new MatOfRect()
+      rEye.detectMultiScale(rightFaceMat, rightEyeDetections)
+
+      (leftEyeDetections.toArray().toVector, rightEyeDetections.toArray().toVector)
+    }
+  }
+
   def frameFaces(image: Mat, faces: Vector[Rect]): Future[Unit] = Future {
+    val lineColor = new Scalar(0, 255, 0)
+    val fontFace = Core.FONT_HERSHEY_PLAIN
+    val fontScale = 2
     for (i ← 0 until faces.size) {
       val rect = faces(i)
-      val lineColor = new Scalar(0, 255, 0)
       val topLeft = new Point(rect.x, rect.y)
       val bottomRight = new Point(rect.x + rect.width, rect.y + rect.height)
       Imgproc.rectangle(image, topLeft, bottomRight, lineColor);
       val textTopLeft = new Point(rect.x, rect.y - 20)
-      val fontFace = Core.FONT_HERSHEY_PLAIN
-      val fontScale = 2
       Imgproc.putText(image, s"Face $i", textTopLeft, fontFace, fontScale, lineColor)
-    }  
+    }
   }
-  
+
+  def frameEyes(image: Mat, faces: Vector[Rect], eyes: Vector[(Vector[Rect], Vector[Rect])]): Future[Unit] = Future {
+    def coords(face: Rect, eye: Rect, isLeft: Boolean = true): (Point, Point) = {
+      val hWidth = if (isLeft) 0 else face.width / 2
+      val topLeft = new Point(face.x + hWidth + eye.x, face.y + eye.y)
+      val bottomRight = new Point(face.x + hWidth + eye.x + eye.width, face.y + eye.y + eye.height)
+      (topLeft, bottomRight)
+    }
+
+    val lineColor = new Scalar(0, 0, 255)
+    for (i ← 0 until faces.size) {
+      val rect = faces(i)
+      val lpoints = eyes(i)._1.headOption match {
+        case Some(l) ⇒ Vector(coords(rect, l))
+        case None    ⇒ Vector()
+      }
+      val rpoints = eyes(i)._2.headOption match {
+        case Some(r) ⇒ Vector(coords(rect, r, false))
+        case None    ⇒ Vector()
+      }
+      for (rects ← lpoints ++ rpoints) {
+        Imgproc.rectangle(image, rects._1, rects._2, lineColor)
+      }
+    }
+  }
+
 }
 
 trait OpenCVVideo {

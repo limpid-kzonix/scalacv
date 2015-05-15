@@ -8,3 +8,4 @@ The FaceDetect test app:
 
 The CamFaceDetect test app:
 * applies FaceDetect to a webcamera and is heavily indebted with https://github.com/rladstaetter/isight-java
+* adds eyes detection too
