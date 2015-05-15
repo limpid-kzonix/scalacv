@@ -41,7 +41,7 @@ trait OpenCVImg extends OpenCVUtils {
     im
   }
 
-  private def toDst(src: Mat, f: (Mat, Mat) => Unit): Mat = {
+  private def toDst(src: Mat, f: (Mat, Mat) ⇒ Unit): Mat = {
     val dst = new Mat()
     f(src, dst)
     dst
@@ -96,6 +96,10 @@ trait OpenCVImg extends OpenCVUtils {
     val weighted = new Mat()
     Core.addWeighted(mat1, 0.5, mat2, 0.5, 0, weighted)
     weighted
+  }
+
+  def canny(mat: Mat, low_threshold: Int): Future[Mat] = Future {
+    toDst(mat, (s, d) ⇒ Imgproc.Canny(s, d, low_threshold, low_threshold * 3, 3, false))
   }
 
 }
