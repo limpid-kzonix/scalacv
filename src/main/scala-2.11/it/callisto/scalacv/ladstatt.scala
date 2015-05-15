@@ -23,12 +23,9 @@ import javafx.event.Event
 import javafx.event.EventHandler
 import javafx.geometry.Orientation
 import javafx.scene.Scene
-import javafx.scene.control.ComboBox
 import javafx.scene.control.Label
 import javafx.scene.control.ListCell
 import javafx.scene.control.ListView
-import javafx.scene.control.Slider
-import javafx.scene.control.ToggleButton
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.BorderPane
@@ -102,26 +99,6 @@ object Lad {
 
   }
 
-  trait FaceScanner {
-
-    def faceDetector: CascadeClassifier
-
-    def scanFace(enabled: => Boolean)(input: Mat): Future[Mat] = {
-      Future {
-        if (enabled) {
-          val faceDetections = new MatOfRect()
-          faceDetector.detectMultiScale(input, faceDetections)
-          for (rect <- faceDetections.toArray()) {
-            Imgproc.rectangle(input, new Point(rect.x, rect.y), new Point(rect.x + rect.width.toDouble, rect.y + rect.height.toDouble), new Scalar(0, 255, 0))
-          }
-          input
-        } else input
-      } recover {
-        case e => input
-      }
-    }
-  }
-
 }
 
 class WebcamService extends Service[Future[Mat]] with LadUtils with JfxUtils with ImageSource {
@@ -142,10 +119,6 @@ object Ladstatt {
 
 trait JfxUtils {
 
-  def mkCellFactoryCallback[T](listCellGenerator: ListView[T] => ListCell[T]) = new Callback[ListView[T], ListCell[T]]() {
-    override def call(list: ListView[T]): ListCell[T] = listCellGenerator(list)
-  }
-
   def mkEventHandler[E <: Event](f: E => Unit) = new EventHandler[E] {
     def handle(e: E) = f(e)
   }
@@ -154,19 +127,9 @@ trait JfxUtils {
     override def call(): X = callFn
   }
 
-  def mkTop: HBox = {
-    val hbox = new HBox()
-    hbox.setStyle("-fx-padding: 15;" +
-      "-fx-background-color: #333333," +
-      "linear-gradient(#f3f3f3 0%, #ced3da 100%);" +
-      "-fx-background-insets: 0, 0 0 1 0;")
-    hbox
-  }
-
-
 }
 
-class Ladstatt extends javafx.application.Application with FaceScanner with LadUtils with Utils with JfxUtils {
+class Ladstatt extends javafx.application.Application with LadUtils with Utils with JfxUtils {
 
   def execOnUIThread(f: => Unit) {
     Platform.runLater(new Runnable {
@@ -174,13 +137,7 @@ class Ladstatt extends javafx.application.Application with FaceScanner with LadU
     })
   }
 
-  // Create a face detector from the cascade file in the resources directory.
-  lazy val faceDetector: CascadeClassifier = new CascadeClassifier(getClass().getResource("/lbpcascade_frontalface.xml").getPath())
-
   override def init(): Unit = loadNativeLibs // important to have this statement on the "right" thread
-
-  def toggleOp(b: ToggleButton, mat: Mat)(left: Mat => Mat, right: Mat => Mat): Mat =
-    if (b.isSelected()) left(mat) else right(mat)
 
   val imageProperty = new SimpleObjectProperty[Image]()
 
@@ -202,11 +159,7 @@ class Ladstatt extends javafx.application.Application with FaceScanner with LadU
 
     label.fontProperty().setValue(Font.font("Verdana", 80))
 
-    val scanFaceToggle = new ToggleButton("with face recognition")
-    val topBox = mkTop
-    topBox.getChildren.addAll(scanFaceToggle)
     imageBp.setCenter(imageView)
-    bp.setTop(topBox)
     bp.setCenter(imageBp)
     bp.setBottom(label)
     val scene = new Scene(bp, MaxWidth + 100, MaxHeight + 300)
@@ -217,8 +170,7 @@ class Ladstatt extends javafx.application.Application with FaceScanner with LadU
           time(
             for {
               fromCamera <- event.getSource.getValue.asInstanceOf[Future[Mat]]
-              faced <- scanFace(scanFaceToggle.isSelected)(fromCamera)
-              image <- mat2Image(faced)
+              image <- mat2Image(fromCamera)
             } {
               setImage(image)
               Platform.runLater(
