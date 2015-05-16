@@ -38,8 +38,6 @@ class CannySlider extends javafx.application.Application with OpenCVImg with Jfx
   val MaxHeight = 600.0
 
   override def start(stage: Stage): Unit = {
-    val camService = new WebcamService
-
     val im = Imgcodecs.imread(resourcePath("/Lena.png"))
 
     def redraw(lower: Int, ratio: Double, l2gradient: Boolean): Unit =
@@ -56,28 +54,31 @@ class CannySlider extends javafx.application.Application with OpenCVImg with Jfx
 
     stage.setTitle("Canny edges")
     val threshold = new Label()
-    val thresholdTxt = new Label()
     threshold.fontProperty().setValue(Font.font("Verdana", 14))
     threshold.setMinWidth(75)
+    val thresholdSlider = mkSlider(1, 100, 10, Orientation.HORIZONTAL)
+    val thresholdTxt = new Label()
     thresholdTxt.fontProperty().setValue(Font.font("Verdana", 14))
     thresholdTxt.textProperty.set("Lower threshold" + " ")
+
     val ratio = new Label()
-    val ratioTxt = new Label()
     ratio.fontProperty().setValue(Font.font("Verdana", 14))
     ratio.setMinWidth(75)
+    val ratioSlider = mkSlider(2, 3, 3, Orientation.HORIZONTAL)
+    val ratioTxt = new Label()
     ratioTxt.fontProperty().setValue(Font.font("Verdana", 14))
     ratioTxt.textProperty.set("Higher:lower ratio" + " ")
+    
     val l2gradient = new CheckBox()
     l2gradient.setSelected(false)
     val l2gradientTxt = new Label()
     l2gradientTxt.fontProperty().setValue(Font.font("Verdana", 14))
     l2gradientTxt.textProperty.set(" " + "L2 gradient")
+    
     val bp = new BorderPane
     val imageView = new ImageView()
     imageView.imageProperty().bind(imageProperty)
     val imageBp = new BorderPane
-    val thresholdSlider = mkSlider(1, 100, 10, Orientation.HORIZONTAL)
-    val ratioSlider = mkSlider(2, 3, 3, Orientation.HORIZONTAL)
     val topBox = mkTop
     topBox.getChildren.addAll(thresholdTxt, thresholdSlider, threshold, ratioTxt, ratioSlider, ratio, l2gradient, l2gradientTxt)
     imageBp.setCenter(imageView)
@@ -104,7 +105,7 @@ class CannySlider extends javafx.application.Application with OpenCVImg with Jfx
         }
       })
     
-    l2gradient.setOnAction(mkEventHandler(event => {
+    l2gradient.setOnAction(mkEventHandler(event ⇒ {
       redraw(thresholdSlider.getValue.toInt, ratioSlider.getValue, l2gradient.isSelected())
     }))
 
