@@ -98,8 +98,8 @@ trait OpenCVImg extends OpenCVUtils {
     weighted
   }
 
-  def canny(mat: Mat, low_threshold: Int): Future[Mat] = Future {
-    toDst(mat, (s, d) ⇒ Imgproc.Canny(s, d, low_threshold, low_threshold * 3, 3, false))
+  def canny(mat: Mat, low_threshold: Int, ratio: Double = 3.0, l2gradient: Boolean = false): Future[Mat] = Future {
+    toDst(mat, (s, d) ⇒ Imgproc.Canny(s, d, low_threshold, low_threshold * ratio, 3, l2gradient))
   }
 
 }
