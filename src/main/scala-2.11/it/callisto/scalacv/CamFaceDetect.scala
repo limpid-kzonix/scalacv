@@ -59,6 +59,10 @@ class CamFaceDetect extends javafx.application.Application with OpenCVImg with O
 
   override def init(): Unit = loadNativeLibs
 
+  lazy val faceDetector = getClassifier("/lbpcascade_frontalface.xml")
+  lazy val lEyeDetector = getClassifier("/haarcascade_lefteye_2splits.xml")
+  lazy val rEyeDetector = getClassifier("/haarcascade_righteye_2splits.xml")
+
   val imageProperty = new SimpleObjectProperty[Image]()
 
   val MaxWidth = 640.0
@@ -66,20 +70,17 @@ class CamFaceDetect extends javafx.application.Application with OpenCVImg with O
 
   override def start(stage: Stage): Unit = {
     val camService = new WebcamService
+
     stage.setTitle("Webcam face detection")
     val bp = new BorderPane
     val imageView = new ImageView()
     imageView.imageProperty().bind(imageProperty)
     val imageBp = new BorderPane
-
-    lazy val faceDetector = getClassifier("/lbpcascade_frontalface.xml")
-    lazy val lEyeDetector = getClassifier("/haarcascade_lefteye_2splits.xml")    
-    lazy val rEyeDetector = getClassifier("/haarcascade_righteye_2splits.xml")    
-
     imageBp.setCenter(imageView)
     bp.setCenter(imageBp)
     val scene = new Scene(bp, MaxWidth + 100, MaxHeight + 100)
     stage.setScene(scene)
+
     camService.setOnSucceeded(
       mkEventHandler(
         event ⇒ {
