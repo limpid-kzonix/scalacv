@@ -8,9 +8,11 @@ import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import javafx.geometry.Orientation
 import javafx.scene.Scene
+import javafx.scene.control.Label
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.BorderPane
+import javafx.scene.text.Font
 import javafx.stage.Stage
 import scala.concurrent._
 import ExecutionContext.Implicits.global
@@ -39,14 +41,16 @@ class CannySlider extends javafx.application.Application with OpenCVImg with Ope
 
     val im = Imgcodecs.imread(resourcePath("/Lena.png"))
 
-    stage.setTitle("Webcam face detection")
+    stage.setTitle("Canny edges")
+    val label = new Label()
+    label.fontProperty().setValue(Font.font("Verdana", 14))
     val bp = new BorderPane
     val imageView = new ImageView()
     imageView.imageProperty().bind(imageProperty)
     val imageBp = new BorderPane
     val effectSlider = mkSlider(1, 100, 10, Orientation.HORIZONTAL)
     val topBox = mkTop
-    topBox.getChildren.addAll(effectSlider)
+    topBox.getChildren.addAll(effectSlider, label)
     imageBp.setCenter(imageView)
     bp.setTop(topBox)
     bp.setCenter(imageBp)
@@ -56,6 +60,7 @@ class CannySlider extends javafx.application.Application with OpenCVImg with Ope
     effectSlider.valueProperty().addListener(
       new ChangeListener[Number]() {
         override def changed(ov: ObservableValue[_ <: Number], old_val: Number, new_val: Number) {
+          label.textProperty.set(" " + new_val.intValue().toString)
           if (new_val != old_val) {
             for {
               gray ← toGray(im)
@@ -71,8 +76,8 @@ class CannySlider extends javafx.application.Application with OpenCVImg with Ope
         }
       })
 
-    stage.show()
     effectSlider.adjustValue(50)
+    stage.show()
 
   }
 
