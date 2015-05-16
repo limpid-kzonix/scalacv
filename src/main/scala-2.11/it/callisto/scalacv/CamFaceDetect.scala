@@ -3,12 +3,10 @@ package it.callisto.scalacv
 import org.opencv.core.Mat
 import org.opencv.objdetect.CascadeClassifier
 import org.opencv.videoio.VideoCapture
+
 import javafx.application.Application
 import javafx.beans.property.SimpleObjectProperty
 import javafx.concurrent.Service
-import javafx.concurrent.Task
-import javafx.event.Event
-import javafx.event.EventHandler
 import javafx.scene.Scene
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
@@ -16,8 +14,6 @@ import javafx.scene.layout.BorderPane
 import javafx.stage.Stage
 import scala.concurrent._
 import ExecutionContext.Implicits.global
-import javafx.application.Platform
-import java.util.concurrent.Executor
 
 class WebcamService extends Service[Future[Mat]] with OpenCVVideo with JfxUtils {
 
@@ -33,24 +29,6 @@ object CamFaceDetect {
     Application.launch(classOf[CamFaceDetect], args: _*)
   }
 
-}
-
-trait JfxUtils {
-
-  def mkEventHandler[E <: Event](f: E ⇒ Unit) = new EventHandler[E] {
-    def handle(e: E) = f(e)
-  }
-
-  def mkTask[X](callFn: ⇒ X): Task[X] = new Task[X] {
-    override def call(): X = callFn
-  }
-
-}
-
-object JfxExecutionContext {
-  implicit val jfxExecutionContext: ExecutionContext = ExecutionContext.fromExecutor(new Executor {
-    def execute(command: Runnable): Unit = Platform.runLater(command)
-  })
 }
 
 class CamFaceDetect extends javafx.application.Application with OpenCVImg with OpenCVDetect with JfxUtils {
