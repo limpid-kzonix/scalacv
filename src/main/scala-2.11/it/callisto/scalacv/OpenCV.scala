@@ -1,12 +1,15 @@
 package it.callisto.scalacv
 
 import scala.concurrent._
+import scala.collection.JavaConversions._
+import scala.collection.mutable.Buffer
 import ExecutionContext.Implicits.global
 
 import org.opencv.core.Core
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.core.MatOfByte
+import org.opencv.core.MatOfPoint
 import org.opencv.core.MatOfRect
 import org.opencv.core.Point
 import org.opencv.core.Rect
@@ -113,7 +116,7 @@ trait OpenCVImg extends OpenCVUtils {
   }
 
   def addVec2fLines(mat: Mat, lines: Mat): Future[Mat] = Future {
-    for (i <- 0 until lines.height()) {
+    for (i ← 0 until lines.height()) {
       val vec = lines.get(i, 0).toVector
       val (rho, theta) = (vec(0), vec(1))
       val a = Math.cos(theta)
@@ -128,7 +131,7 @@ trait OpenCVImg extends OpenCVUtils {
   }
 
   def addVec4iLines(mat: Mat, lines: Mat): Future[Mat] = Future {
-    for (i <- 0 until lines.height()) {
+    for (i ← 0 until lines.height()) {
       val vec = lines.get(i, 0).toVector
       val pt1 = new Point(vec(0), vec(1))
       val pt2 = new Point(vec(2), vec(3))
@@ -136,7 +139,31 @@ trait OpenCVImg extends OpenCVUtils {
     }
     mat
   }
-
+  
+  def longestVec4iLines(mat: Mat, lines: Mat)(implicit cmp: Ordering[Double]): Future[Mat] = Future {
+    val vecs = for (i ← 0 until lines.height()) yield (lines.get(i, 0).toVector)
+    // max distance between points
+    val vec = vecs.maxBy { x => Math.sqrt(Math.pow(Math.abs(x(0) - x(2)), 2) +  Math.pow(Math.abs(x(1) - x(3)), 2)) }
+    val pt1 = new Point(vec(0), vec(1))
+    val pt2 = new Point(vec(2), vec(3))
+    Imgproc.line(mat, pt1, pt2, new Scalar(0, 0, 255), 2)
+    mat
+  }
+  
+  def findContours(mat: Mat): Future[(Buffer[MatOfPoint], Mat)] = Future {
+    val hierarchy = new Mat()
+    val contours: Buffer[MatOfPoint] = Buffer()
+    Imgproc.findContours(mat, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE, new Point(0, 0))
+    (contours, hierarchy)
+  }
+  
+  def addContours(mat: Mat, contours: Buffer[MatOfPoint], hierarchy: Mat): Future[Mat] = Future {
+    for (i ← 0 until contours.size) {
+      Imgproc.drawContours(mat, contours, i, new Scalar(0, 0, 255), 2, 8, hierarchy, 0, new Point())
+    }
+    mat
+  }
+  
 }
 
 trait OpenCVCombos extends OpenCVImg {
