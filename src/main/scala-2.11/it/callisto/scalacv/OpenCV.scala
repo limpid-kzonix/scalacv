@@ -102,6 +102,41 @@ trait OpenCVImg extends OpenCVUtils {
     toDst(mat, (s, d) ⇒ Imgproc.Canny(s, d, low_threshold, low_threshold * ratio, 3, l2gradient))
   }
 
+  // returns a Mat containing an array of vec2f lines
+  def houghLines(mat: Mat, threshold: Int): Future[Mat] = Future {
+    toDst(mat, (s, d) ⇒ Imgproc.HoughLines(s, d, 1, Math.PI / 180, threshold))
+  }
+
+  // returns a Mat containing an array of vec4i lines
+  def houghLinesP(mat: Mat, threshold: Int, minLinLength: Int = 50, maxLineGap: Int = 10): Future[Mat] = Future {
+    toDst(mat, (s, d) ⇒ Imgproc.HoughLinesP(s, d, 1, Math.PI / 180, threshold, minLinLength, maxLineGap))
+  }
+
+  def addVec2fLines(mat: Mat, lines: Mat): Future[Mat] = Future {
+    for (i <- 0 until lines.height()) {
+      val vec = lines.get(i, 0).toVector
+      val (rho, theta) = (vec(0), vec(1))
+      val a = Math.cos(theta)
+      val b = Math.sin(theta)
+      val x0 = a * rho
+      val y0 = b * rho
+      val pt1 = new Point(Math.round(x0 + 1000 * -b), Math.round(y0 + 1000 * a))
+      val pt2 = new Point(Math.round(x0 - 1000 * -b), Math.round(y0 - 1000 * a))
+      Imgproc.line(mat, pt1, pt2, new Scalar(0, 0, 255), 2)
+    }
+    mat
+  }
+
+  def addVec4iLines(mat: Mat, lines: Mat): Future[Mat] = Future {
+    for (i <- 0 until lines.height()) {
+      val vec = lines.get(i, 0).toVector
+      val pt1 = new Point(vec(0), vec(1))
+      val pt2 = new Point(vec(2), vec(3))
+      Imgproc.line(mat, pt1, pt2, new Scalar(0, 0, 255), 2)
+    }
+    mat
+  }
+
 }
 
 trait OpenCVCombos extends OpenCVImg {

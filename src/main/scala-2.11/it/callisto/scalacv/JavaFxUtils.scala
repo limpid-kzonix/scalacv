@@ -38,7 +38,7 @@ trait JfxUtils {
     hbox
   }
 
-  def mkSlider(min: Double, max: Double, initialValue: Double, orientation: Orientation): Slider = {
+  def mkSlider(min: Double, max: Double, initialValue: Double, orientation: Orientation, mtu: Int = 100): Slider = {
     require(min <= initialValue)
     require(initialValue <= max)
     val slider = new Slider()
@@ -47,8 +47,8 @@ trait JfxUtils {
     slider.setValue(initialValue)
     slider.setShowTickLabels(true)
     slider.setShowTickMarks(true)
-    slider.setMajorTickUnit(100)
-    slider.setMinorTickCount(20)
+    slider.setMajorTickUnit(mtu)
+    slider.setMinorTickCount(mtu / 5)
     slider.setBlockIncrement(1)
     slider.setOrientation(orientation)
     slider
