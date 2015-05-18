@@ -39,7 +39,7 @@ class ThresholdDemo extends javafx.application.Application with OpenCVImg with J
   val MaxHeight = 600.0
   
   override def start(stage: Stage): Unit = {
-    val im = Imgcodecs.imread(resourcePath("/glicines.png"))
+    val im = Imgcodecs.imread(resourcePath("/Lena.png"))
 
     def redraw(thr: Int, mode: Int): Unit =
       for {
