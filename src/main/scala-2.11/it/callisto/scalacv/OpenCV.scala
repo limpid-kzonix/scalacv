@@ -185,6 +185,10 @@ trait OpenCVImg extends OpenCVUtils {
     toDst(mat, (s, d) ⇒ Imgproc.threshold(s, d, thresh, 255, mode))
   }
   
+  def brightnessContrast(mat: Mat, α: Double, β: Double): Future[Mat] = Future {
+    toDst(mat, (s, d) ⇒ s.convertTo(d, -1, α, β))
+  }
+  
 }
 
 trait OpenCVCombos extends OpenCVImg {
