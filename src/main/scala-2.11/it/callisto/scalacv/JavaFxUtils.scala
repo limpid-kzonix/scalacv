@@ -5,10 +5,13 @@ import javafx.concurrent.Task
 import javafx.geometry.Orientation
 import javafx.event.Event
 import javafx.event.EventHandler
+import javafx.scene.control.ListCell
+import javafx.scene.control.ListView
 import javafx.scene.control.Slider
 import javafx.scene.layout.HBox
 import scala.concurrent._
 import javafx.application.Platform
+import javafx.util.Callback
 import java.util.concurrent.Executor
 
 object JfxExecutionContext {
@@ -20,6 +23,10 @@ object JfxExecutionContext {
 }
 
 trait JfxUtils {
+
+  def mkCellFactoryCallback[T](listCellGenerator: ListView[T] => ListCell[T]) = new Callback[ListView[T], ListCell[T]]() {
+    override def call(list: ListView[T]): ListCell[T] = listCellGenerator(list)
+  }
 
   def mkEventHandler[E <: Event](f: E ⇒ Unit) = new EventHandler[E] {
     def handle(e: E) = f(e)

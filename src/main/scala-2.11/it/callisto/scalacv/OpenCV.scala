@@ -168,6 +168,23 @@ trait OpenCVImg extends OpenCVUtils {
     mat
   }
   
+  case class ImgprocThresh(val id: String, value: Int) {
+    override def toString = id
+  }
+
+  val threshConstants =
+    Map(
+      "THRESH_BINARY" →     ImgprocThresh("THRESH_BINARY",     Imgproc.THRESH_BINARY),
+      "THRESH_BINARY_INV" → ImgprocThresh("THRESH_BINARY_INV", Imgproc.THRESH_BINARY_INV),
+      "THRESH_TRUNC" →      ImgprocThresh("THRESH_TRUNC",      Imgproc.THRESH_TRUNC),
+      "THRESH_TOZERO" →     ImgprocThresh("THRESH_TOZERO",     Imgproc.THRESH_TOZERO),
+      "THRESH_TOZERO_INV" → ImgprocThresh("THRESH_TOZERO_INV", Imgproc.THRESH_TOZERO_INV)
+    )
+  
+  def threshold(mat: Mat, thresh: Int, mode: Int): Future[Mat] = Future {
+    toDst(mat, (s, d) ⇒ Imgproc.threshold(s, d, thresh, 255, mode))
+  }
+  
 }
 
 trait OpenCVCombos extends OpenCVImg {
