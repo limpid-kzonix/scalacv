@@ -5,21 +5,23 @@ import javafx.concurrent.Task
 import javafx.geometry.Orientation
 import javafx.event.Event
 import javafx.event.EventHandler
+import javafx.scene.control.Label
 import javafx.scene.control.ListCell
 import javafx.scene.control.ListView
 import javafx.scene.control.Slider
 import javafx.scene.layout.HBox
+import javafx.scene.text.Font
 import scala.concurrent._
 import javafx.application.Platform
 import javafx.util.Callback
 import java.util.concurrent.Executor
 
 object JfxExecutionContext {
-  
+
   implicit val jfxExecutionContext: ExecutionContext = ExecutionContext.fromExecutor(new Executor {
     def execute(command: Runnable): Unit = Platform.runLater(command)
   })
-  
+
 }
 
 trait JfxUtils {
@@ -59,6 +61,20 @@ trait JfxUtils {
     slider.setBlockIncrement(1)
     slider.setOrientation(orientation)
     slider
+  }
+
+  def sliderValue(): Label = {
+    val l = new Label()
+    l.fontProperty().setValue(Font.font("Verdana", 14))
+    l.setMinWidth(75)
+    l
+  }
+
+  def sliderText(text: String) = {
+    val l = new Label()
+    l.fontProperty().setValue(Font.font("Verdana", 14))
+    l.textProperty.set(text)
+    l
   }
 
 }

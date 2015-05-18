@@ -53,22 +53,15 @@ class CannySlider extends javafx.application.Application with OpenCVImg with Jfx
       }
 
     stage.setTitle("Canny edges")
-    val threshold = new Label()
-    threshold.fontProperty().setValue(Font.font("Verdana", 14))
-    threshold.setMinWidth(75)
-    val thresholdSlider = mkSlider(1, 100, 10, Orientation.HORIZONTAL)
-    val thresholdTxt = new Label()
-    thresholdTxt.fontProperty().setValue(Font.font("Verdana", 14))
-    thresholdTxt.textProperty.set("Lower threshold" + " ")
-
-    val ratio = new Label()
-    ratio.fontProperty().setValue(Font.font("Verdana", 14))
-    ratio.setMinWidth(75)
-    val ratioSlider = mkSlider(2, 3, 3, Orientation.HORIZONTAL)
-    val ratioTxt = new Label()
-    ratioTxt.fontProperty().setValue(Font.font("Verdana", 14))
-    ratioTxt.textProperty.set("Higher:lower ratio" + " ")
     
+    val thresholdTxt = sliderText("Lower threshold" + " ")
+    val thresholdSlider = mkSlider(1, 100, 10, Orientation.HORIZONTAL)
+    val threshold = sliderValue()
+    
+    val ratioTxt = sliderText("Higher:lower ratio" + " ")
+    val ratioSlider = mkSlider(2, 3, 3, Orientation.HORIZONTAL)
+    val ratio = sliderValue()
+        
     val l2gradient = new CheckBox()
     l2gradient.setSelected(false)
     val l2gradientTxt = new Label()

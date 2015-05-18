@@ -9,13 +9,11 @@ import javafx.beans.value.ObservableValue
 import javafx.geometry.Orientation
 import javafx.scene.Scene
 import javafx.scene.control.ComboBox
-import javafx.scene.control.Label
 import javafx.scene.control.ListCell
 import javafx.scene.control.CheckBox
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.BorderPane
-import javafx.scene.text.Font
 import javafx.stage.Stage
 import scala.concurrent._
 import scala.collection.JavaConversions._
@@ -41,7 +39,7 @@ class ThresholdDemo extends javafx.application.Application with OpenCVImg with J
   val MaxHeight = 600.0
   
   override def start(stage: Stage): Unit = {
-    val im = Imgcodecs.imread(resourcePath("/Lena.png"))
+    val im = Imgcodecs.imread(resourcePath("/glicines.png"))
 
     def redraw(thr: Int, mode: Int): Unit =
       for {
@@ -57,14 +55,10 @@ class ThresholdDemo extends javafx.application.Application with OpenCVImg with J
 
     stage.setTitle("Threshold")
 
-    val thres = new Label()
-    thres.fontProperty().setValue(Font.font("Verdana", 14))
-    thres.setMinWidth(75)
+    val thresTxt = sliderText("Threshold" + " ")
     val thresSlider = mkSlider(0, 255, 128, Orientation.HORIZONTAL, 128)
-    val thresTxt = new Label()
-    thresTxt.fontProperty().setValue(Font.font("Verdana", 14))
-    thresTxt.textProperty.set("Min line length" + " ")
-    
+    val thres = sliderValue()
+        
     val colorComboBox = {
       class ImgprocColorCell extends ListCell[ImgprocThresh] {
 

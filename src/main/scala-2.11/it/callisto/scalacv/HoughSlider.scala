@@ -8,12 +8,10 @@ import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import javafx.geometry.Orientation
 import javafx.scene.Scene
-import javafx.scene.control.Label
 import javafx.scene.control.CheckBox
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.BorderPane
-import javafx.scene.text.Font
 import javafx.stage.Stage
 import scala.concurrent._
 import ExecutionContext.Implicits.global
@@ -56,22 +54,15 @@ class HoughSlider extends javafx.application.Application with OpenCVImg with Jfx
       }
 
     stage.setTitle("Probabilistic Hough Line Transform")
-    val threshold = new Label()
-    threshold.fontProperty().setValue(Font.font("Verdana", 14))
-    threshold.setMinWidth(75)
-    val thresholdSlider = mkSlider(20, 180, 20, Orientation.HORIZONTAL, 50)
-    val thresholdTxt = new Label()
-    thresholdTxt.fontProperty().setValue(Font.font("Verdana", 14))
-    thresholdTxt.textProperty.set("Intersections threshold" + " ")
-
-    val lineLength = new Label()
-    lineLength.fontProperty().setValue(Font.font("Verdana", 14))
-    lineLength.setMinWidth(75)
-    val lineLengthSlider = mkSlider(20, 180, 20, Orientation.HORIZONTAL, 50)
-    val lineLengthTxt = new Label()
-    lineLengthTxt.fontProperty().setValue(Font.font("Verdana", 14))
-    lineLengthTxt.textProperty.set("Min line length" + " ")
     
+    val thresholdTxt = sliderText("Intersections threshold" + " ")
+    val thresholdSlider = mkSlider(20, 180, 20, Orientation.HORIZONTAL, 50)
+    val threshold = sliderValue()
+    
+    val lineLengthTxt = sliderText("Min line length" + " ")
+    val lineLengthSlider = mkSlider(20, 180, 20, Orientation.HORIZONTAL, 50)
+    val lineLength = sliderValue()
+
     val bp = new BorderPane
     val imageView = new ImageView()
     imageView.imageProperty().bind(imageProperty)

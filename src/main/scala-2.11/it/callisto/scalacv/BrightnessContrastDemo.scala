@@ -8,12 +8,10 @@ import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import javafx.geometry.Orientation
 import javafx.scene.Scene
-import javafx.scene.control.Label
 import javafx.scene.control.CheckBox
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.BorderPane
-import javafx.scene.text.Font
 import javafx.stage.Stage
 import scala.concurrent._
 import ExecutionContext.Implicits.global
@@ -52,22 +50,15 @@ class BrightnessContrastDemo extends javafx.application.Application with OpenCVI
       }
 
     stage.setTitle("Brightness and contrast")
-    val brightness = new Label()
-    brightness.fontProperty().setValue(Font.font("Verdana", 14))
-    brightness.setMinWidth(75)
-    val brightnessSlider = mkSlider(0, 100, 20, Orientation.HORIZONTAL, 50)
-    val brightnessTxt = new Label()
-    brightnessTxt.fontProperty().setValue(Font.font("Verdana", 14))
-    brightnessTxt.textProperty.set("Brightness" + " ")
 
-    val contrast = new Label()
-    contrast.fontProperty().setValue(Font.font("Verdana", 14))
-    contrast.setMinWidth(75)
-    val contrastSlider = mkSlider(1, 3, 2, Orientation.HORIZONTAL, 2)
-    val contrastTxt = new Label()
-    contrastTxt.fontProperty().setValue(Font.font("Verdana", 14))
-    contrastTxt.textProperty.set("Contrast" + " ")
+    val brightnessTxt = sliderText("Brightness" + " ")
+    val brightnessSlider = mkSlider(0, 100, 20, Orientation.HORIZONTAL, 50)
+    val brightness = sliderValue()
     
+    val contrastTxt = sliderText("Contrast" + " ")
+    val contrastSlider = mkSlider(1, 3, 2, Orientation.HORIZONTAL, 2)
+    val contrast = sliderValue()
+
     val bp = new BorderPane
     val imageView = new ImageView()
     imageView.imageProperty().bind(imageProperty)
