@@ -141,9 +141,11 @@ trait OpenCVImg extends OpenCVUtils {
   }
   
   def longestVec4iLines(mat: Mat, lines: Mat)(implicit cmp: Ordering[Double]): Future[Mat] = Future {
+    def distSquared(z0: Double, z1: Double): Double = Math.pow(Math.abs(z0 - z1), 2)
+      
     val vecs = for (i ← 0 until lines.height()) yield (lines.get(i, 0).toVector)
     // max distance between points
-    val vec = vecs.maxBy { x => Math.sqrt(Math.pow(Math.abs(x(0) - x(2)), 2) +  Math.pow(Math.abs(x(1) - x(3)), 2)) }
+    val vec = vecs.maxBy { x ⇒ Math.sqrt(distSquared(x(0), x(2)) + distSquared(x(1), x(3))) }
     val pt1 = new Point(vec(0), vec(1))
     val pt2 = new Point(vec(2), vec(3))
     Imgproc.line(mat, pt1, pt2, new Scalar(0, 0, 255), 2)
@@ -158,8 +160,10 @@ trait OpenCVImg extends OpenCVUtils {
   }
   
   def addContours(mat: Mat, contours: Buffer[MatOfPoint], hierarchy: Mat): Future[Mat] = Future {
+    def rnd: Int = Math.floor(Math.random * 256).toInt
     for (i ← 0 until contours.size) {
-      Imgproc.drawContours(mat, contours, i, new Scalar(0, 0, 255), 2, 8, hierarchy, 0, new Point())
+      val color = new Scalar(rnd, rnd, rnd)
+      Imgproc.drawContours(mat, contours, i, color, 2, 8, hierarchy, 0, new Point())
     }
     mat
   }
